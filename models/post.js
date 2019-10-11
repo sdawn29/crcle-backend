@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const mongoose = require('mongoose');
+Joi.objectId = require('joi-objectid')(Joi)
 
 const postSchema = new mongoose.Schema({
     title: {
@@ -12,6 +13,7 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: true,
         maxlength: 20000,
+        default: '',
     },
 
     postType: {
@@ -21,10 +23,12 @@ const postSchema = new mongoose.Schema({
 
     link: {
         type: String,
+        default: "",
     },
 
     points: {
         type: Number,
+        default: 0
     },
 
     author: {
@@ -35,6 +39,7 @@ const postSchema = new mongoose.Schema({
     comments: [{
         type: mongoose.Schema.ObjectId,
         ref: 'Comment',
+        default: ''
     }],
 
     createdAt: {
@@ -45,10 +50,16 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model('Post', postSchema);
 
-function validatepost(post) {
+function validatePost(post) {
     const schema = {
         title: Joi.string().required().min(5).max(120),
         body: Joi.string().required().max(20000),
+        postType: Joi.string().required().max(5),
+        author: Joi.objectId(),
+        link: Joi.string().max(2048),
+        points: Joi.number(),
+        createdAt: Joi.date(),
+        comments: Joi.objectId()
     }
 
     return Joi.validate(post, schema);

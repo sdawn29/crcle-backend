@@ -20,6 +20,7 @@ const commentSchema = new mongoose.Schema({
     children: [{
         type: mongoose.Schema.ObjectId,
         ref: 'Comment',
+        default: []
     }],
 
     createdAt: {
@@ -28,7 +29,7 @@ const commentSchema = new mongoose.Schema({
     }
 });
 
-const comment = mongoose.model('comment', commentSchema);
+const Comment = mongoose.model('comment', commentSchema);
 
 function validatecomment(comment) {
     const schema = {
@@ -39,5 +40,5 @@ function validatecomment(comment) {
     return Joi.validate(comment, schema);
 }
 
-exports.comment = comment;
-exports.validate = validatecomment;
+exports.comment = Comment;
+exports.validate = validateComment;
