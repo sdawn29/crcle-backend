@@ -32,7 +32,18 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id).populate('author', 'username _id isAdmin');
+        const post = await Post.findById(req.params.id).populate('author', 'username _id isAdmin').populate({
+            path: 'comments',
+            options: {
+                sort: {
+                    'upvotes': -1
+                }
+            },
+            populate: {
+                path: 'author',
+                select: 'username _id isAdmin'
+            }
+        });
 
         if (!Post) return res.status(404).send('The post with the given ID is not found');
 

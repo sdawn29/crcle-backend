@@ -40,7 +40,7 @@ const commentSchema = new mongoose.Schema({
         ref: 'User',
     },
 
-    reply: [{
+    replies: [{
         type: String,
         default: []
     }],
@@ -51,16 +51,19 @@ const commentSchema = new mongoose.Schema({
     }
 });
 
-const Comment = mongoose.model('comment', commentSchema);
+const Comment = mongoose.model('Comment', commentSchema);
 
-function validatecomment(comment) {
+function validateComment(comment) {
     const schema = {
-        title: Joi.string().required().min(5).max(120),
         body: Joi.string().required().max(20000),
+        author: Joi.objectId(),
+        points: Joi.number(),
+        createdAt: Joi.date(),
+        postId: Joi.objectId()
     }
 
     return Joi.validate(comment, schema);
 }
 
-exports.comment = Comment;
+exports.Comment = Comment;
 exports.validate = validateComment;

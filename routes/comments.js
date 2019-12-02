@@ -6,79 +6,83 @@ const {
 const {
     User
 } = require('../models/user')
+
+const {
+    Post
+} = require('../models/post')
 const mongoose = require('mongoose');
 mongoose.set('useFindAndModify', false);
 const express = require('express');
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-    const posts = await Post.find().sort('-upvotes').populate('author', 'username _id isAdmin');
-    res.status(200).send({
-        status: "success",
-        posts
-    });
-});
-
-// Posts after authenticating
-// router.get('/:username',auth,  async (req, res) => {
-
-//     if (!Post) return res.status(404).send('The post with the given ID is not found');
-
+// router.get('/', async (req, res) => {
+//     const comments = await Comment.find().sort('-upvotes').populate('author', 'username _id isAdmin');
 //     res.status(200).send({
 //         status: "success",
-//         data: Post
+//         comments
 //     });
+// });
+
+
+// router.get('/:id', async (req, res) => {
+//     try {
+//         const comment = await Comment.findById(req.params.id).populate('author', 'username _id isAdmin');
+
+//         if (!Comment) return res.status(404).send('The comment with the given ID is not found');
+
+//         res.status(200).send({
+//             status: "success",
+//             comment
+//         });
+
+//     } catch (e) {
+//         console.error(e)
+//         res.status(500).send({
+//             status: "error",
+//             error: "INERNAL_SERVER_ERROR"
+//         });
+//     }
 // })
 
-router.get('/:id', async (req, res) => {
-    try {
-        const comment = await Comment.findById(req.params.id).populate('author', 'username _id isAdmin');
-
-        if (!Post) return res.status(404).send('The post with the given ID is not found');
-
-        res.status(200).send({
-            status: "success",
-            post
-        });
-
-    } catch (e) {
-        console.error(e)
-        res.status(500).send({
-            status: "error",
-            error: "INERNAL_SERVER_ERROR"
-        });
-    }
-})
-
 router.post('/', [auth], async (req, res) => {
-    const {
-        error
-    } = validate(req.body);
-    if (error) return res.status(400).send({
-        status: "error",
-        errorMsg: "ERR_VALIDATION",
-        data: error.details[0].message
-    });
+    // const {
+    //     error
+    // } = validate(req.body);
+    // if (error) return res.status(400).send({
+    //     status: "error",
+    //     errorMsg: "ERR_VALIDATION",
+    //     data: error.details[0].message
+    // });
 
-    const title = req.body.title;
     const body = req.body.body;
     const author = req.body.author;
+    const postId = req.body.postId
     try {
-        const post = new Post({
-            title: title,
+        const comment = new Comment({
             body: body,
             author: author,
+            postId: postId,
         });
-        await post.save();
+        await comment.save();
         res.status(200).send({
             status: "success",
-            post
+            comment
         });
 
-        //Updating post into users collection 
-        await User.findByIdAndUpdate(author, {
+        //Updating comment into users collection 
+        // await User.findByIdAndUpdate(author, {
+        //     "$push": {
+        //         "comments": comment._id
+        //     }
+        // }, {
+        //     "new": true,
+        //     "upsert": true
+        // });
+
+        // Updating comment into posts collection
+        await Post.findByIdAndUpdate(postId, {
             "$push": {
-                "posts": post._id
+                "comments": comment._id
             }
         }, {
             "new": true,
@@ -96,11 +100,11 @@ router.post('/', [auth], async (req, res) => {
 });
 
 
-// Api endpoint to incement or decrement points in posts
+// Api endpoint to incement or decrement points in comments
 router.put('/:id/:action/:user/:voted', [auth], async (req, res) => {
     if (req.params.action == 'upvote' && req.params.voted == 'true') {
         try {
-            const post = await Post.findByIdAndUpdate(req.params.id, {
+            const comment = await Comment.findByIdAndUpdate(req.params.id, {
                 $inc: {
                     upvotes: 1,
                     downvotes: -1
@@ -117,7 +121,7 @@ router.put('/:id/:action/:user/:voted', [auth], async (req, res) => {
             });
             return res.status(200).send({
                 status: "success",
-                post: post
+                comment: comment
             })
 
         } catch (err) {
@@ -127,7 +131,7 @@ router.put('/:id/:action/:user/:voted', [auth], async (req, res) => {
 
     if (req.params.action == 'downvote' && req.params.voted == 'true') {
         try {
-            const post = await Post.findByIdAndUpdate(req.params.id, {
+            const comment = await Comment.findByIdAndUpdate(req.params.id, {
                 $inc: {
                     upvotes: -1,
                     downvotes: 1
@@ -145,7 +149,7 @@ router.put('/:id/:action/:user/:voted', [auth], async (req, res) => {
             });
             return res.status(200).send({
                 status: "success",
-                post: post
+                comment: comment
             })
 
         } catch (err) {
@@ -155,7 +159,7 @@ router.put('/:id/:action/:user/:voted', [auth], async (req, res) => {
 
     if (req.params.action == 'upvote' && req.params.voted == 'false') {
         try {
-            await Post.findByIdAndUpdate(req.params.id, {
+            await Comment.findByIdAndUpdate(req.params.id, {
                 $inc: {
                     upvotes: 1
                 },
@@ -174,7 +178,7 @@ router.put('/:id/:action/:user/:voted', [auth], async (req, res) => {
 
     if (req.params.action == 'downvote' && req.params.voted == 'false') {
         try {
-            await Post.findByIdAndUpdate(req.params.id, {
+            await Comment.findByIdAndUpdate(req.params.id, {
                 $inc: {
                     downvotes: 1
                 },
@@ -192,40 +196,40 @@ router.put('/:id/:action/:user/:voted', [auth], async (req, res) => {
     }
     res.status(200).send({
         status: "success",
-        Post
+        Comment
     });
 });
 
 
-router.put('/:id', [auth], async (req, res) => {
+// router.put('/:id', [auth], async (req, res) => {
 
-    const Post = await Post.findOneAndUpdate(req.params.id, {
-        title: req.body.title,
-        body: req.body.body,
-    }, {
-        new: true,
-        upsert: true,
-    });
+//     const Comment = await Comment.findOneAndUpdate(req.params.id, {
+//         title: req.body.title,
+//         body: req.body.body,
+//     }, {
+//         new: true,
+//         upsert: true,
+//     });
 
-    res.status(200).send({
-        status: "success",
-        Post
-    });
-});
+//     res.status(200).send({
+//         status: "success",
+//         Comment
+//     });
+// });
 
-router.delete('/:id', [auth], async (req, res) => {
-    const Post = await Post.findByIdAndRemove(req.params.id);
+// router.delete('/:id', [auth], async (req, res) => {
+//     const Comment = await Comment.findByIdAndRemove(req.params.id);
 
-    if (!Post) return res.status(404).send({
-        status: "error",
-        msg: "The Post with the given ID is not found"
-    });
+//     if (!Comment) return res.status(404).send({
+//         status: "error",
+//         msg: "The Comment with the given ID is not found"
+//     });
 
-    res.status(200).send({
-        status: "success",
-        Post
-    });
-})
+//     res.status(200).send({
+//         status: "success",
+//         Comment
+//     });
+// })
 
 
 
