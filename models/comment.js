@@ -8,18 +8,40 @@ const commentSchema = new mongoose.Schema({
         maxlength: 20000,
     },
 
-    points: {
-        type: Number,
+    postId: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Post',
     },
+
+    upvotes: {
+        type: Number,
+        default: 0
+    },
+
+    downvotes: {
+        type: Number,
+        default: 0
+    },
+
+    upvotedBy: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        default: [],
+    }],
+
+    downvotedBy: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        default: [],
+    }],
 
     author: {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
     },
 
-    children: [{
-        type: mongoose.Schema.ObjectId,
-        ref: 'Comment',
+    reply: [{
+        type: String,
         default: []
     }],
 

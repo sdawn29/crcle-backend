@@ -6,7 +6,6 @@ const postSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
-        minlength: 5,
         maxlength: 120
     },
     body: {
@@ -26,10 +25,27 @@ const postSchema = new mongoose.Schema({
         default: "",
     },
 
-    points: {
+    upvotes: {
         type: Number,
         default: 0
     },
+
+    downvotes: {
+        type: Number,
+        default: 0
+    },
+
+    upvotedBy: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        default: [],
+    }],
+
+    downvotedBy: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+        default: [],
+    }],
 
     author: {
         type: mongoose.Schema.ObjectId,
@@ -39,7 +55,7 @@ const postSchema = new mongoose.Schema({
     comments: [{
         type: mongoose.Schema.ObjectId,
         ref: 'Comment',
-        default: ''
+        default: []
     }],
 
     createdAt: {
@@ -52,7 +68,7 @@ const Post = mongoose.model('Post', postSchema);
 
 function validatePost(post) {
     const schema = {
-        title: Joi.string().required().min(5).max(120),
+        title: Joi.string().required().max(120),
         body: Joi.string().required().max(20000),
         postType: Joi.string().required().max(5),
         author: Joi.objectId(),

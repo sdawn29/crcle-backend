@@ -1,8 +1,8 @@
 const auth = require('../middleware/auth');
 const {
-    Post,
+    Comment,
     validate
-} = require('../models/post');
+} = require('../models/comment');
 const {
     User
 } = require('../models/user')
@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-        const post = await Post.findById(req.params.id).populate('author', 'username _id isAdmin');
+        const comment = await Comment.findById(req.params.id).populate('author', 'username _id isAdmin');
 
         if (!Post) return res.status(404).send('The post with the given ID is not found');
 
@@ -62,16 +62,12 @@ router.post('/', [auth], async (req, res) => {
 
     const title = req.body.title;
     const body = req.body.body;
-    const postType = req.body.postType;
     const author = req.body.author;
-    const link = req.body.link;
     try {
         const post = new Post({
             title: title,
             body: body,
-            postType: postType,
             author: author,
-            link: link,
         });
         await post.save();
         res.status(200).send({
